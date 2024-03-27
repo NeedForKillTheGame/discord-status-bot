@@ -7,7 +7,7 @@ The script updates channels #nfkplanet and #donate on [NFK Community Discord ser
 0. Install docker on your system
 
 1. Build the image
-```plaintext
+```bash
 docker build -t local/discord-status-bot .
 ```
 2. Rename `config.php.example` to `config.php`
@@ -15,7 +15,7 @@ docker build -t local/discord-status-bot .
 3. Set `discord_token` inside config
 
 4. Run the image
-```plaintext
+```bash
 docker run -v <path_to_config.php>:/app/config.php:ro [ **-e** *option=value*] local/discord-status-bot
 ```
 Available options are:\
