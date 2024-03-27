@@ -1,9 +1,7 @@
 FROM php:7.4-alpine
 
 RUN apk update && \
-    apk add bash \
-            curl \
-            zip
+    apk add bash
 
 RUN curl -s https://getcomposer.org/installer | \
     php -- --install-dir=/usr/bin/ --filename=composer
