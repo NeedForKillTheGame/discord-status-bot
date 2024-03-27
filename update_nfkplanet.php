@@ -12,10 +12,9 @@ use RestCord\DiscordClient;
 use Moment\Moment;
 
 
-// fetch players from the plalet
+// fetch players from the planet
 $data = file_get_contents(Config::planet_data_url);
 $servers = json_decode($data);
-$body = "No players online\n";
 $p_count = 0;
 // count players
 foreach ($servers as $s)
@@ -23,37 +22,63 @@ foreach ($servers as $s)
 	$load = explode('/', $s->load);
 	foreach ($s->players as $p)
 	{
-		if ($p->playerID)
+		// count only confirmed players on tribes servers
+		if (preg_match('/TRX/',$s->name) and $p->playerID)
+		{
 			$p_count++;
+		}
+		// count all players on normal servers
+		else
+		{
+			$p_count++;
+		}
 	}
 	
 }
 $players = "";
 // display players
-if ($p_count > 0)
+if ($p_count == 0)
 {
-	$body =  "**$p_count players online**\n";
-	$body .= '```';
-
-	foreach ($servers as $s)
-	{
-		if (count($s->players) == 0)
-			continue;
-
-		$body .= '[' . $s->gametype . '] ' . $s->map . ' '  . $s->load . '
-';
-		foreach ($s->players as $p)
-		{
-			$body .= '- ' . ($p->playerID ? '' : '(bot) ') . $p->name . '
-';
-			$players .= $p->name . "\n";
-		}
-		$body .= '
-';
-	}
-	$body .= '
-```';
+	$body = "No players online\n";
 }
+elseif ($p_count == 1)
+{
+	$body = "**$p_count player online**\n";
+}
+else
+{
+	$body = "**$p_count players online**\n";
+}
+
+$body .= '```';
+
+foreach ($servers as $s)
+{
+	$body .= sprintf("%-24s %-14s %-4s %-3s",$s->name,$s->map,$s->gametype,$s->load);
+	if (count($s->players) > 0)
+	{
+		$body .= "\n";
+	}
+	foreach ($s->players as $p)
+	{
+		// add bot prefix on unknown players on tribes servers
+		if (preg_match('/TRX/',$s->name) and $p->playerID)
+		{
+			$body .= ' - ' . ($p->playerID ? '' : '(bot) ') . $p->name . '
+';
+		}
+		else
+		{
+			$body .= ' - ' . $p->name . '
+';
+		}
+	}
+	$players .= $p->name . "\n";
+	$body .= '
+';
+}
+$body .= '
+```';
 
 // save previous players count to decrease changes on discord
 $players_prev = 0;
@@ -88,7 +113,7 @@ $date = $moment->fromNow()->getRelative();
 $date_str = !strpos($a, 'hour') && !strpos($a, 'day')
 	? "**" . $date . "**"
 	: $date;
-$body .= "\n*Last activity " . $date_str . "*\n\n\n";
+$body .= "\n*Last activity was " . $date_str . "*\n\n\n";
 
 
 
@@ -101,8 +126,19 @@ foreach ($matches as $m)
 	$moment = new Moment(strtotime($m->dateTime));
 	$date = $moment->fromNow()->getRelative(); 
 
-	$ebody .= '[`#`' . $m->matchID . '](https://stats.needforkill.ru/match/' . $m->matchID . ') ';
-	$ebody .= '[' . $m->gameType . '] **' . $m->players . '** *' . $date . '*';
+	$ebody .= $m->hostName . ' ';
+	$ebody .= '[`#`' . $m->matchID;
+	if ($m->comments > 0)
+	{
+		$ebody .= ' (' . $m->comments . ') ';
+	}
+	$ebody .= '](https://stats.needforkill.ru/match/' . $m->matchID . ') ';
+	$ebody .= '(';
+	$ebody .= $m->map . ' ' ;
+	//$ebody .= '[' . $m->gameType . '] '
+	$ebody .= '**' . $m->players . '**';
+	$ebody .= ') ';
+	$ebody .= '*' . $date . '*';
 	$ebody .= "\n";
 }
 $embed = array(
