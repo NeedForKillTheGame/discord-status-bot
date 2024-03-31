@@ -23,9 +23,12 @@ foreach ($servers as $s)
 	foreach ($s->players as $p)
 	{
 		// count only confirmed players on tribes servers
-		if (preg_match('/TRX/',$s->name) and $p->playerID)
+		if (preg_match('/TRX/',$s->name))
 		{
-			$p_count++;
+			if ($p->playerID)
+			{
+				$p_count++;
+			}
 		}
 		// count all players on normal servers
 		else
